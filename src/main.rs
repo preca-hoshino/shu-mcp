@@ -24,6 +24,11 @@ use std::sync::Arc;
 /// Returns an error if the stdio transport fails to initialize or server fails to start.
 #[tokio::main]
 async fn main() -> SdkResult<()> {
+    // ── 数据加载与定时更新 ──
+    // 首先从本地目录加载数据
+    data::loader::refresh_from_local().await;
+    // 启动后台定时拉取远程数据（每 1 小时）
+    data::updater::spawn_updater();
     let server_details = InitializeResult {
         server_info: Implementation {
             name: "shu-mcp".into(),
