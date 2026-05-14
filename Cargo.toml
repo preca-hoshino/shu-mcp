@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 description = "SHU MCP Server implementation"
 license = "MIT"
-readme = "README.md"
+repository = "https://github.com/preca-hoshino/shu-mcp"
 keywords = ["mcp", "server"]
 categories = ["development-tools"]
 
@@ -12,7 +12,6 @@ categories = ["development-tools"]
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 reqwest = { version = "0.12", features = ["json"] }
-regex = "1.11.1"
 urlencoding = "2.1.3"
 
 tokio = { version = "1.51.1", features = ["full"] }

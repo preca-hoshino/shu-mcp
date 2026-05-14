@@ -2,7 +2,9 @@
 //!
 //! This is the main entry point for the SHU MCP server, using `rust-mcp-sdk`.
 
+pub mod data;
 pub mod handler;
+pub mod tools;
 
 use handler::MyServerHandler;
 use rust_mcp_sdk::{
@@ -22,6 +24,9 @@ use std::sync::Arc;
 /// Returns an error if the stdio transport fails to initialize or server fails to start.
 #[tokio::main]
 async fn main() -> SdkResult<()> {
+    // ── 数据加载与定时更新 ──
+    // 首次拉取 + 定时刷新均在后台执行，不阻塞 MCP 服务器启动
+    data::updater::spawn_updater();
     let server_details = InitializeResult {
         server_info: Implementation {
             name: "shu-mcp".into(),

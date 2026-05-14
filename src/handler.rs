@@ -1,13 +1,14 @@
 //! Request handlers for the SHU MCP Server.
 
+use crate::tools::ShuTools;
 use async_trait::async_trait;
 use rust_mcp_sdk::{
     McpServer,
     mcp_server::ServerHandler,
     schema::{
         CallToolRequestParams, CallToolResult, ListResourcesResult, ListToolsResult,
-        PaginatedRequestParams, ReadResourceContent, ReadResourceRequestParams, ReadResourceResult,
-        Resource, RpcError, TextResourceContents, schema_utils::CallToolError,
+        PaginatedRequestParams, ReadResourceRequestParams, ReadResourceResult, RpcError,
+        schema_utils::CallToolError,
     },
 };
 use std::sync::Arc;
@@ -26,7 +27,7 @@ impl ServerHandler for MyServerHandler {
         Ok(ListToolsResult {
             meta: None,
             next_cursor: None,
-            tools: vec![], // Add your tools here
+            tools: ShuTools::tools(),
         })
     }
 
@@ -38,17 +39,7 @@ impl ServerHandler for MyServerHandler {
         Ok(ListResourcesResult {
             meta: None,
             next_cursor: None,
-            resources: vec![Resource {
-                uri: "shu://example".into(),
-                name: "Example Resource".into(),
-                description: Some("An example resource".into()),
-                mime_type: Some("text/plain".into()),
-                annotations: None,
-                icons: vec![],
-                meta: None,
-                size: None,
-                title: None,
-            }],
+            resources: vec![],
         })
     }
 
@@ -57,29 +48,19 @@ impl ServerHandler for MyServerHandler {
         params: ReadResourceRequestParams,
         _runtime: Arc<dyn McpServer>,
     ) -> std::result::Result<ReadResourceResult, RpcError> {
-        if params.uri == "shu://example" {
-            Ok(ReadResourceResult {
-                meta: None,
-                contents: vec![ReadResourceContent::TextResourceContents(
-                    TextResourceContents {
-                        uri: params.uri,
-                        mime_type: Some("text/plain".into()),
-                        text: "This is an example resource content.".into(),
-                        meta: None,
-                    },
-                )],
-            })
-        } else {
-            Err(RpcError::invalid_params()
-                .with_message(format!("Unknown resource URI: {}", params.uri)))
-        }
+        Err(RpcError::invalid_params()
+            .with_message(format!("Unknown resource URI: {}", params.uri)))
     }
 
     async fn handle_call_tool_request(
         &self,
-        _params: CallToolRequestParams,
+        params: CallToolRequestParams,
         _runtime: Arc<dyn McpServer>,
     ) -> std::result::Result<CallToolResult, CallToolError> {
-        Err(CallToolError::new(RpcError::method_not_found().with_message("No tools implemented".into())))
+        let tool_params: ShuTools = ShuTools::try_from(params).map_err(CallToolError::new)?;
+
+        match tool_params {
+            ShuTools::SearchArticlesTool(tool) => tool.call_tool().await,
+        }
     }
 }
