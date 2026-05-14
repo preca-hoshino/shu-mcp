@@ -47,3 +47,36 @@ pub struct ArticleRef<'a> {
     /// 所属部门名称。
     pub department: &'a str,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn deserialize_department_data() {
+        let json = r#"{
+            "domain": "www.shu.edu.cn",
+            "department": "上海大学",
+            "type": "16",
+            "crawl_time": "20260514_004804",
+            "total_articles": 2,
+            "columns": {"综合新闻": 1, "通知公告": 1},
+            "articles": [
+                {"title": "测试文章", "url": "https://example.com", "date": "2026-05-13", "column": "综合新闻"},
+                {"title": "通知", "url": "https://example.com/2", "date": "2026-05-12", "column": "通知公告"}
+            ]
+        }"#;
+
+        let result: Result<DepartmentData, _> = serde_json::from_str(json);
+        assert!(result.is_ok());
+        if let Ok(data) = result {
+            assert_eq!(data.department, "上海大学");
+            assert_eq!(data.site_type, "16");
+            assert_eq!(data.total_articles, 2);
+            assert_eq!(data.columns.len(), 2);
+            assert_eq!(data.articles.len(), 2);
+            assert_eq!(data.articles[0].title, "测试文章");
+            assert_eq!(data.articles[0].date, "2026-05-13");
+        }
+    }
+}
