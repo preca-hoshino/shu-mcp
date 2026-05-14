@@ -50,7 +50,7 @@ pub fn spawn_updater() {
 ///
 /// # Errors
 /// 网络请求失败、JSON 解析失败时返回错误描述。
-async fn fetch_and_update() -> Result<(), String> {
+pub async fn fetch_and_update() -> Result<(), String> {
     let branch = std::env::var("SHU_DATA_BRANCH").unwrap_or_else(|_| DEFAULT_BRANCH.to_string());
     let client = reqwest::Client::builder()
         .user_agent("shu-mcp/0.1.0")
