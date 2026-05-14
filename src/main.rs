@@ -25,11 +25,7 @@ use std::sync::Arc;
 #[tokio::main]
 async fn main() -> SdkResult<()> {
     // ── 数据加载与定时更新 ──
-    // 启动时从 GitHub 远程仓库拉取最新数据
-    if let Err(e) = data::updater::fetch_and_update().await {
-        eprintln!("❌ 首次数据拉取失败: {e}");
-    }
-    // 启动后台定时拉取（每 1 小时）
+    // 首次拉取 + 定时刷新均在后台执行，不阻塞 MCP 服务器启动
     data::updater::spawn_updater();
     let server_details = InitializeResult {
         server_info: Implementation {
