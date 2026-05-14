@@ -3,9 +3,9 @@
 //!
 //! 提供按关键词搜索上海大学各部门新闻文章的 MCP Tool。
 
+pub mod search;
 pub mod tool;
 
-pub(super) mod search;
 pub(super) mod strings;
 
 pub use tool::SearchArticlesTool;
