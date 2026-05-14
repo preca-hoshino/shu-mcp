@@ -5,6 +5,7 @@ use super::strings::{
     ERR_INVALID_DATE_FROM, ERR_INVALID_DATE_TO, ERR_LIMIT_OUT_OF_RANGE, LIMIT_DEFAULT, LIMIT_MAX,
     LIMIT_MIN, TABLE_HEADER, WARN_NO_RESULTS,
 };
+use crate::data::loader;
 use rust_mcp_sdk::macros::{JsonSchema, mcp_tool};
 use rust_mcp_sdk::schema::{CallToolResult, TextContent, schema_utils::CallToolError};
 use std::fmt::Write;
@@ -99,13 +100,16 @@ impl SearchArticlesTool {
             )));
         }
 
-        // ── 2. 执行搜索 ──
+        // ── 2. 获取索引并执行搜索 ──
+
+        let index = loader::get_index_snapshot().await;
 
         let results = search_articles(
             &self.query,
             self.date_from.as_deref(),
             self.date_to.as_deref(),
             limit.into(),
+            &index,
         );
 
         // ── 3. 格式化输出 ──
