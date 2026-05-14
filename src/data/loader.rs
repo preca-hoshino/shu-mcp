@@ -1,14 +1,14 @@
-//! 数据加载器。
+//! 数据加载器与内存索引管理。
 //!
-//! 启动时扫描 `shu-mcp-data/output/*.json`，构建内存索引。使用 `OnceLock`
-//! 确保全局仅加载一次，后续调用返回缓存引用。
+//! 启动时扫描 `shu-mcp-data/output/*.json` 构建内存索引，后续通过
+//! [`refresh_index`] 支持定时热刷新。使用 `RwLock` 保护索引的并发读写。
 
 use super::models::DepartmentData;
 use std::path::{Path, PathBuf};
-use std::sync::OnceLock;
+use tokio::sync::RwLock;
 
-/// 全局数据索引：每个元素为 `(部门数据, 文件路径)`。
-static DATA_INDEX: OnceLock<Vec<DepartmentData>> = OnceLock::new();
+/// 全局可刷新数据索引。
+static DATA_INDEX: RwLock<Vec<DepartmentData>> = RwLock::const_new(Vec::new());
 
 /// 默认数据目录（相对于 shu-mcp 项目根目录）。
 const DEFAULT_DATA_DIR: &str = "../shu-mcp-data/output";
@@ -62,16 +62,38 @@ fn load_all_json(dir: &Path) -> Result<Vec<DepartmentData>, String> {
     Ok(departments)
 }
 
-/// 获取全局数据索引。首次调用时加载，后续返回缓存。
+/// 从本地数据目录加载并刷新全局索引。
 ///
-/// # Panics
-/// 仅在数据目录完全不存在时打印错误并返回空列表（不 panic）。
-pub fn get_index() -> &'static Vec<DepartmentData> {
-    DATA_INDEX.get_or_init(|| {
-        let dir = data_dir();
-        load_all_json(&dir).unwrap_or_else(|e| {
-            eprintln!("❌ 数据加载失败: {e}");
-            Vec::new()
-        })
-    })
+/// 若加载失败，保留旧索引不变并打印错误。
+pub async fn refresh_from_local() {
+    let dir = data_dir();
+    match load_all_json(&dir) {
+        Ok(new_data) => {
+            let mut index = DATA_INDEX.write().await;
+            *index = new_data;
+            eprintln!("✅ 本地数据加载完成，共 {} 个部门", index.len());
+        }
+        Err(e) => {
+            eprintln!("❌ 本地数据加载失败: {e}");
+        }
+    }
+}
+
+/// 用新的数据列表替换全局索引。
+pub async fn replace_index(new_data: Vec<DepartmentData>) {
+    let mut index = DATA_INDEX.write().await;
+    *index = new_data;
+}
+
+/// 获取全局数据索引的只读快照。调用方须持有读锁期间使用返回值。
+///
+/// 首次调用前应确保已执行 [`refresh_from_local`] 或 [`replace_index`]。
+pub async fn get_index_snapshot() -> Vec<DepartmentData> {
+    let index = DATA_INDEX.read().await;
+    index.clone()
+}
+
+/// 获取全局数据索引的读锁引用。持有期间可安全读取。
+pub async fn get_index_ref() -> tokio::sync::RwLockReadGuard<'static, Vec<DepartmentData>> {
+    DATA_INDEX.read().await
 }
