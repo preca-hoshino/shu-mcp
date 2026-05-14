@@ -2,7 +2,9 @@
 //!
 //! This is the main entry point for the SHU MCP server, using `rust-mcp-sdk`.
 
+pub mod data;
 pub mod handler;
+pub mod tools;
 
 use handler::MyServerHandler;
 use rust_mcp_sdk::{
