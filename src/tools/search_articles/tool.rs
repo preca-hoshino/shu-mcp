@@ -160,3 +160,36 @@ fn is_valid_date(s: &str) -> bool {
 fn escape_md(s: &str) -> String {
     s.replace('|', "\\|")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn valid_date_ok() {
+        assert!(is_valid_date("2026-05-13"));
+        assert!(is_valid_date("2000-01-01"));
+    }
+
+    #[test]
+    fn invalid_date_rejected() {
+        assert!(!is_valid_date(""));
+        assert!(!is_valid_date("2026"));
+        assert!(!is_valid_date("2026/05/13"));
+        assert!(!is_valid_date("2026-5-1"));
+        assert!(!is_valid_date("abcd-ef-gh"));
+        assert!(!is_valid_date("2026-05-13T00:00"));
+    }
+
+    #[test]
+    fn escape_md_pipes() {
+        assert_eq!(escape_md("hello|world"), "hello\\|world");
+        assert_eq!(escape_md("no pipes"), "no pipes");
+        assert_eq!(escape_md("a|b|c"), "a\\|b\\|c");
+    }
+
+    #[test]
+    fn escape_md_empty() {
+        assert_eq!(escape_md(""), "");
+    }
+}
