@@ -79,8 +79,9 @@ pub async fn fetch_and_update() -> Result<(), String> {
         .iter()
         .filter_map(|entry| {
             let name = entry.get("name")?.as_str()?;
-            if std::path::Path::new(name)
-                .extension()
+            if name
+                .rsplit('.')
+                .next()
                 .is_some_and(|ext| ext.eq_ignore_ascii_case("json"))
             {
                 Some(name.to_string())
