@@ -26,6 +26,8 @@
 |---|---|---|
 | `search_articles` | 实时搜索上海大学全校各院系/部门的通知公告与新闻资讯 | `query`, `scope`, `date_range`, `limit`, `page` |
 | `get_article_detail` | 获取上海大学官方通知公告/新闻的具体正文内容、发布元数据与附件列表 | `url` |
+| `query_empty_classrooms` | 查询上海大学指定教学楼在指定日期的空闲自习教室（支持多楼并排、指定节次或全天） | `building`, `date`, `sections`, `floor` |
+| `get_classroom_schedule` | 查询指定教室全天排课日历及空闲时段，或按关键词反查课程地点（支持多楼并排） | `building`, `room`, `query`, `date` |
 
 ## 许可证
 

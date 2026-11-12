@@ -225,6 +225,12 @@ impl VsbClient {
             last_err
         })
     }
+
+    /// 获取底层 HTTP Client 引用。
+    #[must_use]
+    pub fn http_client(&self) -> &reqwest::Client {
+        &self.client
+    }
 }
 
 /// 清洗单条文章记录。

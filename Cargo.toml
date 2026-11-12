@@ -1,3 +1,4 @@
+#:schema -
 [package]
 name = "shu-mcp"
 version = "0.1.0"
@@ -18,6 +19,7 @@ tokio = { version = "1.51.1", features = ["full"] }
 rust-mcp-sdk = "0.9.0"
 async-trait = "0.1.89"
 scraper = "0.29.0"
+chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
 
 [lints.rust]
 unsafe_code = "forbid"
@@ -37,3 +39,12 @@ todo = "deny"
 unimplemented = "deny"
 missing_docs_in_private_items = "deny"
 multiple_crate_versions = "allow"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true
+incremental = false
+
