@@ -2,20 +2,28 @@
 
 上海大学 MCP (Model Context Protocol) 服务 —— 为 AI 助手提供上海大学全校各院系/部门通知公告与新闻资讯的实时检索能力。
 
-## 数据源与服务特点
+## 接入方式
 
-本服务直连上海大学官方集约化 VSB 网站群搜索系统（`/aop_component/webber/search/search/search/queryPage`）：
-- **实时响应**：毫秒级全网实时检索，无需等待离线爬虫产出；
-- **全校覆盖**：内置全校 71 个院系与部门的站点与栏目映射，全校范围深度检索；
-- **智能过滤**：支持标题/正文搜索范围、单参数灵活日期区间过滤及紧凑分页；
-- **零额外存储**：纯内存直连无状态服务，启动极速。
+基于标准输入输出 (`stdio`) 通道通信（JSON-RPC 2.0）。可直接从 GitHub Releases 下载对应平台的单文件可执行二进制（或使用 `cargo run` 源码运行）。
 
-## 快速开始
+### 客户端配置示例
 
-```bash
-# 构建发布版本
-cargo build --release
+以 Claude Desktop / Cursor / VS Code 的 MCP 配置为例：
 
-# 运行
-cargo run
+```json
+{
+  "mcpServers": {
+    "shu-mcp": {
+      "command": "C:\\path\\to\\shu-mcp-windows-x64.exe"
+    }
+  }
+}
 ```
+
+## 提供的工具
+
+| 工具名称 | 功能描述 | 参数说明 |
+|---|---|---|
+| `search_articles` | 实时搜索上海大学全校各院系/部门的通知公告与新闻资讯 | • `query` (string, 必填)：搜索关键词，支持多词空格分隔<br>• `scope` (string, 可选)：范围 (`"title"`/`"body"`/`"all"`，默认 `"title"`)<br>• `date_range` (string, 可选)：单日 `YYYY-MM-DD` 或区间 `..`、`~`<br>• `limit` (integer, 可选)：返回数量 (1-50，默认 15)<br>• `page` (integer, 可选)：页码 (从 1 开始) |
+
+
