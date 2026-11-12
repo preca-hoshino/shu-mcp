@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     name: Build (${{ matrix.name }})
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}
     permissions:
       id-token: write
       attestations: write
@@ -17,14 +17,24 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: x64
+          - name: linux-x64
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            artifact_name: shu-mcp-linux-x64
+          - name: linux-arm64
+            os: ubuntu-latest
+            target: aarch64-unknown-linux-musl
+            artifact_name: shu-mcp-linux-arm64
+          - name: windows-x64
+            os: windows-latest
             target: x86_64-pc-windows-msvc
             arch: x64
-            artifact_name: shu-mcp-x64.exe
-          - name: arm64
+            artifact_name: shu-mcp-windows-x64.exe
+          - name: windows-arm64
+            os: windows-latest
             target: aarch64-pc-windows-msvc
             arch: x64_arm64
-            artifact_name: shu-mcp-arm64.exe
+            artifact_name: shu-mcp-windows-arm64.exe
 
     steps:
       - name: Checkout code
@@ -32,7 +42,8 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Setup MSVC developer environment
+      - name: Setup MSVC developer environment (Windows)
+        if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: ${{ matrix.arch }}
@@ -42,28 +53,38 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Build Release Binary (${{ matrix.name }})
+      - name: Install cross (Linux)
+        if: runner.os == 'Linux'
+        uses: taiki-e/install-action@cross
+
+      - name: Build Release Binary (Windows)
+        if: runner.os == 'Windows'
         env:
           RUSTFLAGS: "-C link-arg=/OPT:REF,ICF"
         run: |
           cargo build --release --target ${{ matrix.target }}
+
+      - name: Build Release Binary (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cross build --release --target ${{ matrix.target }}
 
       - name: Prepare Binaries for Attestation & Upload
         shell: bash
         run: |
           mkdir -p staging
           TARGET_DIR="target/${{ matrix.target }}/release"
-          # 复制为带架构标识的二进制
-          cp "${TARGET_DIR}/shu-mcp.exe" "staging/${{ matrix.artifact_name }}"
-          # 如果是 x64，额外保留一份无后缀的默认文件名，方便直接使用
-          if [ "${{ matrix.arch }}" = "x64" ]; then
-            cp "${TARGET_DIR}/shu-mcp.exe" "staging/shu-mcp.exe"
+          BINARY_NAME="shu-mcp"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            BINARY_NAME="shu-mcp.exe"
           fi
+          cp "${TARGET_DIR}/${BINARY_NAME}" "staging/${{ matrix.artifact_name }}"
+          chmod +x "staging/${{ matrix.artifact_name }}"
 
       - name: Generate build provenance attestation
         uses: actions/attest-build-provenance@v2
         with:
-          subject-path: staging/*.exe
+          subject-path: staging/*
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -75,7 +96,7 @@ jobs:
   publish:
     name: Publish Release
     needs: build
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: write
 
@@ -111,23 +132,26 @@ jobs:
         run: |
           cat << EOF > release_notes.md
           ### 下载说明
-          - **x64 架构（常规 PC）**：推荐直接下载 \`shu-mcp.exe\`（或 \`shu-mcp-x64.exe\`）
-          - **ARM64 架构（骁龙 X Elite / Surface 等）**：请下载 \`shu-mcp-arm64.exe\`
+          - **Linux x64**：\`shu-mcp-linux-x64\`（静态独立二进制，兼容主流发行版及 Docker/Alpine 等环境）
+          - **Linux ARM64**：\`shu-mcp-linux-arm64\`（静态独立二进制，兼容 ARM64 服务器、树莓派等环境）
+          - **Windows x64**：\`shu-mcp-windows-x64.exe\`
+          - **Windows ARM64**：\`shu-mcp-windows-arm64.exe\`
 
           **更新日志**：
           > ${COMMIT_MSG}
 
           **验证构建来源 (GitHub Attestations)**：
           \`\`\`bash
-          gh attestation verify shu-mcp.exe --repo ${{ github.repository }}
+          gh attestation verify shu-mcp-linux-x64 --repo ${{ github.repository }}
           \`\`\`
           EOF
 
           # 使用 GitHub CLI 发布 Release 并上传全部架构二进制文件
           gh release create "${RELEASE_TAG}" \
-            dist/shu-mcp.exe \
-            dist/shu-mcp-x64.exe \
-            dist/shu-mcp-arm64.exe \
+            dist/shu-mcp-linux-x64 \
+            dist/shu-mcp-linux-arm64 \
+            dist/shu-mcp-windows-x64.exe \
+            dist/shu-mcp-windows-arm64.exe \
             --title "${RELEASE_TAG}" \
             --notes-file release_notes.md
 
