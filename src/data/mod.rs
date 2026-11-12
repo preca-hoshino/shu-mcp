@@ -1,14 +1,12 @@
 //! 数据层模块。
 //!
-//! 职责分离：
-//! - [`fetcher`] — 纯数据获取，从 GitHub 拉取 JSON
-//! - [`loader`] — 索引管理，协调 fetcher 与全局索引
-//! - [`updater`] — 定时调度，周期性触发数据刷新
-//! - [`models`] — 数据模型定义
+//! 包含：
+//! - [`client`] — 官方 VSB 搜索接口 HTTP 客户端
+//! - [`models`] — 搜索请求与响应数据模型
+//! - [`sources`] — 71 个全校部门元数据与全局查询常量
 //!
-//! 不涉及任何本地文件操作。
+//! 直接实时直连上海大学官方接口，不涉及任何本地文件与定时爬虫。
 
-pub mod fetcher;
-pub mod loader;
+pub mod client;
 pub mod models;
-pub mod updater;
+pub mod sources;
