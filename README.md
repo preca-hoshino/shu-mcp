@@ -26,4 +26,6 @@
 |---|---|---|
 | `search_articles` | 实时搜索上海大学全校各院系/部门的通知公告与新闻资讯 | `query`, `scope`, `date_range`, `limit`, `page` |
 
+## 许可证
 
+[AGPL 3.0](./LICENSE)
