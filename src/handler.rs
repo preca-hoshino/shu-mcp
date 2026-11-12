@@ -61,6 +61,7 @@ impl ServerHandler for MyServerHandler {
 
         match tool_params {
             ShuTools::SearchArticlesTool(tool) => tool.call_tool().await,
+            ShuTools::GetArticleDetailTool(tool) => tool.call_tool().await,
         }
     }
 }

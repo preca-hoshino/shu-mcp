@@ -25,6 +25,7 @@
 | 工具名称 | 功能描述 | 参数列表 |
 |---|---|---|
 | `search_articles` | 实时搜索上海大学全校各院系/部门的通知公告与新闻资讯 | `query`, `scope`, `date_range`, `limit`, `page` |
+| `get_article_detail` | 获取上海大学官方通知公告/新闻的具体正文内容、发布元数据与附件列表 | `url` |
 
 ## 许可证
 

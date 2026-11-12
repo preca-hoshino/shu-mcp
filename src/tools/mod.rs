@@ -3,9 +3,11 @@
 //!
 //! 使用 `tool_box!` 宏将所有 MCP Tool 汇总为枚举，供 handler 路由分发。
 
+pub mod get_article_detail;
 pub mod search_articles;
 
+use get_article_detail::GetArticleDetailTool;
 use rust_mcp_sdk::tool_box;
 use search_articles::SearchArticlesTool;
 
-tool_box!(ShuTools, [SearchArticlesTool]);
+tool_box!(ShuTools, [SearchArticlesTool, GetArticleDetailTool]);

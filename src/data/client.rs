@@ -172,6 +172,59 @@ impl VsbClient {
             last_err
         })
     }
+
+    /// 拉取指定文章页面的 HTML 并解析为文章详情。
+    ///
+    /// # Errors
+    /// 网络请求错误、状态码异常或读取响应失败时返回错误描述字符串。
+    pub async fn fetch_article_detail(&self, url: &str) -> Result<super::detail_parser::ArticleDetail, String> {
+        let mut retries = 0;
+        let mut last_err = String::new();
+
+        while retries <= MAX_RETRIES {
+            let resp = self
+                .client
+                .get(url)
+                .header(reqwest::header::USER_AGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                .send()
+                .await;
+
+            let response = match resp {
+                Ok(r) => r,
+                Err(err) => {
+                    last_err = format!("网络请求失败: {err}");
+                    retries += 1;
+                    tokio::time::sleep(RETRY_BASE_DELAY * (1 << (retries - 1))).await;
+                    continue;
+                }
+            };
+
+            let status = response.status();
+            if status.is_server_error() || status == reqwest::StatusCode::REQUEST_TIMEOUT {
+                last_err = format!("服务器异常状态: {status}");
+                retries += 1;
+                tokio::time::sleep(RETRY_BASE_DELAY * (1 << (retries - 1))).await;
+                continue;
+            }
+
+            if !status.is_success() {
+                return Err(format!("文章页面访问异常 ({status})"));
+            }
+
+            let html = match response.text().await {
+                Ok(t) => t,
+                Err(err) => return Err(format!("读取文章页面内容失败: {err}")),
+            };
+
+            return Ok(super::detail_parser::parse_article_detail(&html, url));
+        }
+
+        Err(if last_err.is_empty() {
+            "请求文章页面超时重试超限".to_string()
+        } else {
+            last_err
+        })
+    }
 }
 
 /// 清洗单条文章记录。

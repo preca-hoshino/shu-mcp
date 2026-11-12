@@ -8,5 +8,7 @@
 //! 直接实时直连上海大学官方接口，不涉及任何本地文件与定时爬虫。
 
 pub mod client;
+pub mod detail_parser;
+pub mod markdown;
 pub mod models;
 pub mod sources;
