@@ -22,8 +22,8 @@
 
 ## 提供的工具
 
-| 工具名称 | 功能描述 | 参数说明 |
+| 工具名称 | 功能描述 | 参数列表 |
 |---|---|---|
-| `search_articles` | 实时搜索上海大学全校各院系/部门的通知公告与新闻资讯 | • `query` (string, 必填)：搜索关键词，支持多词空格分隔<br>• `scope` (string, 可选)：范围 (`"title"`/`"body"`/`"all"`，默认 `"title"`)<br>• `date_range` (string, 可选)：单日 `YYYY-MM-DD` 或区间 `..`、`~`<br>• `limit` (integer, 可选)：返回数量 (1-50，默认 15)<br>• `page` (integer, 可选)：页码 (从 1 开始) |
+| `search_articles` | 实时搜索上海大学全校各院系/部门的通知公告与新闻资讯 | `query`, `scope`, `date_range`, `limit`, `page` |
 
 
